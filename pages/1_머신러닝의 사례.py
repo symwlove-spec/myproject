@@ -14,7 +14,7 @@ st.title("💡 머신러닝 문제 해결 사례")
 st.caption("실제 개발된 머신러닝 문제 해결 사례 웹 페이지를 시뮬레이션 화면으로 확인합니다.")
 
 # HTML 파일 경로 설정 (프로젝트 루트에 위치한 aaaa.html 파일)
-html_file_path = "aaaa.html"
+html_file_path = "비버의 축용요소 끼워맞춤(E20250242 황선영_최종).html"
 
 # 파일 존재 여부 확인 후 렌더링
 if os.path.exists(html_file_path):
