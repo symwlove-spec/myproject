@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>비버 바비의 동력전달장치 조립 - CT 문제해결</title>
+    <!-- Pretendard 웹폰트 -->
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-hover: #4338CA;
+            --secondary: #0EA5E9;
+            --accent: #F59E0B;
+            --success: #10B981;
+            --danger: #EF4444;
+            --bg-main: #F8FAFC;
+            --card-bg: #FFFFFF;
+            --text-main: #0F172A;
+            --text-sub: #475569;
+            --border-color: #E2E8F0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 20px 16px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1150px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* 1. 상단 전광판 대시보드 */
+        .header-dashboard {
+            background: linear-gradient(135deg, #4F46E5 0%, #0EA5E9 100%);
+            color: white;
+            padding: 22px 28px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.25);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header-title h1 {
+            font-size: 22px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-title p {
+            font-size: 14px;
+            opacity: 0.92;
+            margin-top: 4px;
+        }
+
+        .scoreboard {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(8px);
+            padding: 10px 22px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .score-item {
+            text-align: center;
+        }
+
+        .score-item .label {
+            font-size: 12px;
+            font-weight: 600;
+            opacity: 0.85;
+            display: block;
+        }
+
+        .score-item .value {
+            font-size: 22px;
+            font-weight: 800;
+            color: #FFFFFF;
+        }
+
+        .divider {
+            width: 1px;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-reset-game {
+            background-color: #FFFFFF;
+            color: var(--primary);
+            border: none;
+            padding: 10px 18px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .btn-reset-game:hover {
+            background-color: #F1F5F9;
+            transform: translateY(-1px);
+        }
+
+        /* 2. 반응형 2열 메인 레이아웃 (PC: 2열, 모바일: 1열) */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        @media (min-width: 850px) {
+            .main-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 18px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .card-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* 좌측 참고 테이블 */
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            font-size: 13.5px;
+        }
+
+        th, td {
+            padding: 11px 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: #F1F5F9;
+            color: var(--text-sub);
+            font-weight: 700;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .tag-loose { background: #FEF3C7; color: #92400E; }
+        .tag-tight { background: #FEE2E2; color: #991B1B; }
+        .tag-trans { background: #E0E7FF; color: #3730A3; }
+
+        /* CT 3단계 탭 네비게이션 */
+        .stepper-nav {
+            display: flex;
+            gap: 6px;
+            background: #F1F5F9;
+            padding: 6px;
+            border-radius: 12px;
+        }
+
+        .step-tab {
+            flex: 1;
+            text-align: center;
+            padding: 8px 4px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-sub);
+            border-radius: 8px;
+            cursor: not-allowed;
+            opacity: 0.6;
+            transition: all 0.2s;
+        }
+
+        .step-tab.unlocked {
+            cursor: pointer;
+            opacity: 0.9;
+        }
+
+        .step-tab.active {
+            background: #FFFFFF;
+            color: var(--primary);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            opacity: 1;
+        }
+
+        /* 단계별 문제 상자 */
+        .step-content {
+            display: none;
+            flex-direction: column;
+            gap: 16px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .step-content.active {
+            display: flex;
+        }
+
+        .quiz-box {
+            background-color: #FAFAFA;
+            border: 2px dashed var(--primary);
+            border-radius: 14px;
+            padding: 18px;
+        }
+
+        .custom-select {
+            padding: 6px 10px;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--primary);
+            background-color: #FFFFFF;
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            outline: none;
+            cursor: pointer;
+            margin: 2px;
+        }
+
+        .form-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* 피드백 메시지 박스 */
+        .info-box {
+            display: none;
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-size: 13.5px;
+            line-height: 1.6;
+        }
+
+        .feedback-correct { background-color: #ECFDF5; border: 1px solid #A7F3D0; color: #065F46; }
+        .feedback-wrong { background-color: #FEF2F2; border: 1px solid #FCA5A5; color: #991B1B; }
+
+        /* 하단 버튼 그룹 */
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: auto;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-primary { background-color: var(--primary); color: white; }
+        .btn-primary:hover { background-color: var(--primary-hover); }
+
+        /* 3. 비버 바비 춤추는 모달 팝업 */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-card {
+            background: #FFFFFF;
+            border-radius: 24px;
+            padding: 32px 24px;
+            max-width: 420px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        /* 춤추는 비버 SVG 애니메이션 */
+        .dancing-beaver {
+            width: 140px;
+            height: 140px;
+            animation: dance 0.6s infinite alternate ease-in-out;
+        }
+
+        @keyframes dance {
+            0% { transform: translateY(0) rotate(-6deg) scale(1); }
+            100% { transform: translateY(-16px) rotate(6deg) scale(1.05); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            pointer-events: none;
+            z-index: 1001;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+
+<div class="container">
+    <!-- 1. 상단 전광판 대시보드 -->
+    <header class="header-dashboard">
+        <div class="header-title">
+            <h1>🦫 비버 바비의 동력전달장치 조립</h1>
+            <p>컴퓨팅 사고력(CT) 3단계를 거쳐 완벽한 끼워맞춤을 완성해보세요!</p>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="scoreboard">
+                <div class="score-item">
+                    <span class="label">현재 점수</span>
+                    <span class="value" id="scoreVal">0점</span>
+                </div>
+                <div class="divider"></div>
+                <div class="score-item">
+                    <span class="label">총 시도 횟수</span>
+                    <span class="value" id="attemptVal">0회</span>
+                </div>
+            </div>
+            <button class="btn-reset-game" onclick="resetGame()">🔄 게임 다시하기</button>
+        </div>
+    </header>
+
+    <!-- 2. 반응형 2열 레이아웃 -->
+    <div class="main-grid">
+        <!-- 1열 (좌측): 문제 시나리오 및 기준 데이터 표 고정 -->
+        <section class="card">
+            <div class="card-title">📌 1열. 시나리오 및 조립 데이터</div>
+            <p style="font-size: 14px; color: var(--text-sub);">
+                비버 바비는 숲속 방앗간에 들어갈 동력전달장치를 조립하려 합니다. 아래 선배 작업자 5명의 조립 데이터 규칙을 대조하여 문제를 해결하세요.
+            </p>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>작업자</th>
+                            <th>구멍 지름 ($H$)</th>
+                            <th>가공 축 지름 ($S$)</th>
+                            <th>끼워맞춤 결과</th>
+                        </tr>
+                    </thead>
+                    <tbody id="refTableBody">
+                        <!-- JS 무작위 생성 -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="background-color: #F8FAFC; padding: 12px; border-radius: 10px; font-size: 12.5px; color: var(--text-sub); border: 1px solid var(--border-color);">
+                💡 <strong>치수 기호 안내:</strong><br>
+                • $H$: 베어링 구멍 지름 &nbsp;&nbsp;|&nbsp;&nbsp; • $S_{min}$: 축 최소 지름 &nbsp;&nbsp;|&nbsp;&nbsp; • $S_{max}$: 축 최대 지름
+            </div>
+        </section>
+
+        <!-- 2열 (우측): 컴퓨팅 사고력(CT) 3단계 학습 모듈 -->
+        <section class="card">
+            <div class="card-title">🧩 2열. 컴퓨팅 사고력(CT) 문제 해결</div>
+
+            <!-- 스텝 네비게이션 탭 -->
+            <div class="stepper-nav">
+                <div class="step-tab active unlocked" id="tab1" onclick="switchStep(1)">1. 추상화</div>
+                <div class="step-tab" id="tab2" onclick="switchStep(2)">2. 패턴 분석</div>
+                <div class="step-tab" id="tab3" onclick="switchStep(3)">3. 알고리즘 적용</div>
+            </div>
+
+            <!-- STEP 1: 추상화 (1명 작업자 속성 추출) -->
+            <div class="step-content active" id="step1">
+                <p style="font-size: 14px; color: var(--text-sub);">
+                    <strong>Step 1. 데이터 추상화:</strong> 좌측 데이터 표에서 <strong>작업자 1명</strong>을 선택하여 주요 속성을 정확히 추출해보세요.
+                </p>
+
+                <div class="quiz-box">
+                    <div class="form-row">
+                        <span>1. 대상 작업자 선택:</span>
+                        <select id="s1Worker" class="custom-select" onchange="updateS1Options()">
+                            <option value="">-- 작업자 선택 --</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <span>2. 베어링 구멍 지름 ($H$):</span>
+                        <select id="s1Hole" class="custom-select"><option value="">-- 선택 --</option></select>
+                    </div>
+                    <div class="form-row">
+                        <span>3. 가공 축 지름 범위 ($S$):</span>
+                        <select id="s1Shaft" class="custom-select"><option value="">-- 선택 --</option></select>
+                    </div>
+                    <div class="form-row">
+                        <span>4. 끼워맞춤 결과:</span>
+                        <select id="s1Fit" class="custom-select"><option value="">-- 선택 --</option></select>
+                    </div>
+                </div>
+
+                <div id="fb1" class="info-box"></div>
+
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="verifyStep1()">🧪 Step 1 추상화 검증하기</button>
+                </div>
+            </div>
+
+            <!-- STEP 2: 패턴 분석 -->
+            <div class="step-content" id="step2">
+                <p style="font-size: 14px; color: var(--text-sub);">
+                    <strong>Step 2. 패턴 분석:</strong> 구멍($H$)과 축($S$)의 크기 관계에 따른 물리적 현상 및 끼워맞춤 패턴 규칙을 완성하세요.
+                </p>
+
+                <div class="quiz-box" style="font-size: 14px; line-height: 2.2;">
+                    1. $S_{max} < H$ (축이 구멍보다 항상 작음)<br>
+                    ➔ 현상: <strong>[항상 틈새]</strong> ➔ 끼워맞춤: 
+                    <select id="s2Rule1" class="custom-select">
+                        <option value="">-- 선택 --</option>
+                        <option value="헐거운 끼워맞춤">헐거운 끼워맞춤</option>
+                        <option value="억지 끼워맞춤">억지 끼워맞춤</option>
+                        <option value="중간 끼워맞춤">중간 끼워맞춤</option>
+                    </select><br>
+
+                    2. $S_{min} > H$ (축이 구멍보다 항상 큼)<br>
+                    ➔ 현상: 
+                    <select id="s2Rule2" class="custom-select">
+                        <option value="">-- 선택 --</option>
+                        <option value="항상 틈새">항상 틈새</option>
+                        <option value="항상 죔새">항상 죔새</option>
+                        <option value="틈새 또는 죔새">틈새 또는 죔새</option>
+                    </select>
+                    ➔ 끼워맞춤: <strong>[억지 끼워맞춤]</strong>
+                </div>
+
+                <div id="fb2" class="info-box"></div>
+
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="verifyStep2()">🔍 Step 2 패턴 규칙 검증하기</button>
+                </div>
+            </div>
+
+            <!-- STEP 3: 알고리즘 적용 (중복 없는 신규 문제) -->
+            <div class="step-content" id="step3">
+                <p style="font-size: 14px; color: var(--text-sub);">
+                    <strong>Step 3. 알고리즘 적용:</strong> 기준 표에 **없던 새로운 규격 부품**입니다. 알고리즘 규칙을 대입하여 정답을 맞추세요.
+                </p>
+
+                <div class="quiz-box">
+                    <div class="table-wrapper" style="margin-bottom: 12px;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>새로운 베어링 구멍 지름</th>
+                                    <th>새로운 가공 축 지름</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong id="targetHole" style="color:var(--primary);">Ø50</strong></td>
+                                    <td><strong id="targetShaft" style="color:var(--primary);">Ø50.01 ~ Ø50.02</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div style="font-size: 14.5px; line-height: 2.2;">
+                        바비는 신규 부품을 비교했을 때
+                        <select id="s3Ans1" class="custom-select">
+                            <option value="">-- 현상 선택 --</option>
+                            <option value="항상 틈새">항상 틈새</option>
+                            <option value="항상 죔새">항상 죔새</option>
+                            <option value="틈새 또는 죔새">틈새 또는 죔새</option>
+                        </select>
+                        가 발생하는 것을 보고
+                        <select id="s3Ans2" class="custom-select">
+                            <option value="">-- 끼워맞춤 선택 --</option>
+                            <option value="헐거운 끼워맞춤">헐거운 끼워맞춤</option>
+                            <option value="억지 끼워맞춤">억지 끼워맞춤</option>
+                            <option value="중간 끼워맞춤">중간 끼워맞춤</option>
+                        </select>
+                        이 됨을 최종 확인했다.
+                    </div>
+                </div>
+
+                <div id="fb3" class="info-box"></div>
+
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="submitStep3()">🎯 최종 정답 제출하기</button>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+
+<!-- 3. 비버 바비 춤추는 성공 모달 -->
+<div id="successModal" class="modal-overlay">
+    <div class="modal-card">
+        <!-- 춤추는 비버 SVG -->
+        <svg class="dancing-beaver" viewBox="0 0 120 120">
+            <!-- 귀 -->
+            <circle cx="35" cy="35" r="12" fill="#78350F" />
+            <circle cx="85" cy="35" r="12" fill="#78350F" />
+            <!-- 얼굴 -->
+            <ellipse cx="60" cy="60" rx="40" ry="35" fill="#9A3412" />
+            <!-- 눈 -->
+            <circle cx="45" cy="50" r="5" fill="#FFFFFF" />
+            <circle cx="46" cy="50" r="2.5" fill="#000000" />
+            <circle cx="75" cy="50" r="5" fill="#FFFFFF" />
+            <circle cx="74" cy="50" r="2.5" fill="#000000" />
+            <!-- 주둥이 & 앞니 -->
+            <ellipse cx="60" cy="65" rx="16" ry="12" fill="#FED7AA" />
+            <polygon points="56,70 64,70 64,78 56,78" fill="#FFFFFF" stroke="#000" stroke-width="0.8" />
+            <line x1="60" y1="70" x2="60" y2="78" stroke="#000" stroke-width="0.8" />
+            <circle cx="60" cy="61" r="4" fill="#451A03" />
+            <!-- 안전모 -->
+            <path d="M 25 42 Q 60 15 95 42 Z" fill="#F59E0B" />
+            <rect x="20" y="40" width="80" height="6" rx="3" fill="#D97706" />
+        </svg>
+
+        <h2 style="font-size: 22px; font-weight: 800; color: var(--primary);">🎉 참 잘했어요!</h2>
+        <p style="font-size: 14.5px; color: var(--text-sub); word-break: keep-all;">
+            컴퓨팅 사고력(CT) 3단계를 모두 완벽하게 해결했습니다!<br>바비가 성공적으로 장치를 조립하고 신나게 춤을 춥니다!
+        </p>
+
+        <button class="btn btn-primary" style="width: 100%;" onclick="closeModalAndNext()">🚀 다음 라운드 도전하기</button>
+    </div>
+</div>
+
+<script>
+    // 상태 관리 변수
+    let score = 0;
+    let attempts = 0;
+    let unlockedStep = 1;
+    let currentStep = 1;
+
+    let refData = [];      // 1열 기준 데이터 (5명)
+    let targetProblem = {}; // Step 3 문제 데이터 (기준 데이터와 완전 분리된 규격)
+
+    window.onload = () => {
+        initRound();
+    };
+
+    // 라운드 초기화 및 무작위 데이터 생성
+    function initRound() {
+        unlockedStep = 1;
+        switchStep(1);
+
+        // 1. 기준 데이터 생성 (구멍 Ø20~Ø40 규격 활용)
+        const workerPool = ['선민', '수호', '명규', '태윤', '한난', '민준', '서연', '도윤'];
+        const chosenWorkers = workerPool.sort(() => 0.5 - Math.random()).slice(0, 5);
+
+        const rowConfigs = [
+            { fit: '헐거운 끼워맞춤', h: 20 },
+            { fit: '억지 끼워맞춤', h: 20 },
+            { fit: '중간 끼워맞춤', h: 20 },
+            { fit: '중간 끼워맞춤', h: 30 },
+            { fit: '헐거운 끼워맞춤', h: 30 }
+        ].sort(() => 0.5 - Math.random());
+
+        refData = rowConfigs.map((cfg, idx) => {
+            let name = chosenWorkers[idx];
+            let h = cfg.h;
+            let sMin, sMax;
+
+            if (cfg.fit === '헐거운 끼워맞춤') {
+                sMin = (h - 0.05).toFixed(2);
+                sMax = (h - 0.02).toFixed(2);
+            } else if (cfg.fit === '억지 끼워맞춤') {
+                sMin = (h + 0.02).toFixed(2);
+                sMax = (h + 0.05).toFixed(2);
+            } else { // 중간
+                sMin = (h - 0.01).toFixed(2);
+                sMax = (h + 0.01).toFixed(2);
+            }
+
+            return {
+                worker: name,
+                hole: h,
+                shaftRange: `Ø${sMin} ~ Ø${sMax}`,
+                fit: cfg.fit
+            };
+        });
+
+        renderRefTable();
+        populateStep1Dropdowns();
+
+        // 2. Step 3 실전 문제 생성 (기준 표와 절대 중복되지 않도록 Ø45~Ø80 신규 규격 사용)
+        const newHoles = [45, 50, 55, 60, 70, 80];
+        const tHole = newHoles[Math.floor(Math.random() * newHoles.length)];
+        const fits = ['헐거운 끼워맞춤', '억지 끼워맞춤', '중간 끼워맞춤'];
+        const tFit = fits[Math.floor(Math.random() * fits.length)];
+
+        let tMin, tMax, tAns1;
+        if (tFit === '헐거운 끼워맞춤') {
+            tMin = (tHole - 0.04).toFixed(2);
+            tMax = (tHole - 0.01).toFixed(2);
+            tAns1 = "항상 틈새";
+        } else if (tFit === '억지 끼워맞춤') {
+            tMin = (tHole + 0.01).toFixed(2);
+            tMax = (tHole + 0.03).toFixed(2);
+            tAns1 = "항상 죔새";
+        } else {
+            tMin = (tHole - 0.02).toFixed(2);
+            tMax = (tHole + 0.02).toFixed(2);
+            tAns1 = "틈새 또는 죔새";
+        }
+
+        targetProblem = {
+            hole: tHole,
+            shaftRange: `Ø${tMin} ~ Ø${tMax}`,
+            ans1: tAns1,
+            ans2: tFit
+        };
+
+        document.getElementById('targetHole').innerText = `Ø${targetProblem.hole}`;
+        document.getElementById('targetShaft').innerText = targetProblem.shaftRange;
+
+        // 피드백 초기화
+        document.getElementById('fb1').style.display = 'none';
+        document.getElementById('fb2').style.display = 'none';
+        document.getElementById('fb3').style.display = 'none';
+    }
+
+    // 1열 표 렌더링
+    function renderRefTable() {
+        let html = '';
+        refData.forEach(row => {
+            let tagClass = row.fit === '헐거운 끼워맞춤' ? 'tag-loose' : (row.fit === '억지 끼워맞춤' ? 'tag-tight' : 'tag-trans');
+            html += `
+                <tr>
+                    <td><strong>${row.worker}</strong></td>
+                    <td>Ø${row.hole}</td>
+                    <td>${row.shaftRange}</td>
+                    <td><span class="tag ${tagClass}">${row.fit}</span></td>
+                </tr>
+            `;
+        });
+        document.getElementById('refTableBody').innerHTML = html;
+    }
+
+    // Step 1 드롭다운 설정
+    function populateStep1Dropdowns() {
+        const wSelect = document.getElementById('s1Worker');
+        wSelect.innerHTML = '<option value="">-- 작업자 선택 --</option>';
+        refData.forEach(r => {
+            wSelect.innerHTML += `<option value="${r.worker}">${r.worker}</option>`;
+        });
+
+        // 보기 옵션 셔플 생성
+        const holes = [20, 25, 30, 40].sort(() => 0.5 - Math.random());
+        const hSelect = document.getElementById('s1Hole');
+        hSelect.innerHTML = '<option value="">-- 선택 --</option>';
+        holes.forEach(h => hSelect.innerHTML += `<option value="${h}">Ø${h}</option>`);
+
+        const sSelect = document.getElementById('s1Shaft');
+        sSelect.innerHTML = '<option value="">-- 선택 --</option>';
+        refData.map(r => r.shaftRange).sort(() => 0.5 - Math.random()).forEach(s => {
+            sSelect.innerHTML += `<option value="${s}">${s}</option>`;
+        });
+
+        const fSelect = document.getElementById('s1Fit');
+        fSelect.innerHTML = '<option value="">-- 선택 --</option>';
+        ['헐거운 끼워맞춤', '억지 끼워맞춤', '중간 끼워맞춤'].forEach(f => {
+            fSelect.innerHTML += `<option value="${f}">${f}</option>`;
+        });
+    }
+
+    // 탭 전환 핸들러 (잠금 검사)
+    function switchStep(stepNum) {
+        if (stepNum > unlockedStep) {
+            alert(`⚠️ Step ${stepNum - 1} 단계를 먼저 성공해야 이동할 수 있습니다!`);
+            return;
+        }
+
+        currentStep = stepNum;
+        for (let i = 1; i <= 3; i++) {
+            const tab = document.getElementById(`tab${i}`);
+            const content = document.getElementById(`step${i}`);
+            
+            if (i === stepNum) {
+                tab.classList.add('active');
+                content.classList.add('active');
+            } else {
+                tab.classList.remove('active');
+                content.classList.remove('active');
+            }
+
+            if (i <= unlockedStep) {
+                tab.classList.add('unlocked');
+            } else {
+                tab.classList.remove('unlocked');
+            }
+        }
+    }
+
+    // Step 1 검증
+    function verifyStep1() {
+        const w = document.getElementById('s1Worker').value;
+        const h = document.getElementById('s1Hole').value;
+        const s = document.getElementById('s1Shaft').value;
+        const f = document.getElementById('s1Fit').value;
+        const fb = document.getElementById('fb1');
+
+        if (!w || !h || !s || !f) {
+            fb.className = 'info-box feedback-wrong';
+            fb.innerHTML = '⚠️ 모든 항목을 선택한 후 검증 버튼을 눌러주세요.';
+            fb.style.display = 'block';
+            return;
+        }
+
+        const match = refData.find(r => r.worker === w);
+        if (match && match.hole == h && match.shaftRange === s && match.fit === f) {
+            fb.className = 'info-box feedback-correct';
+            fb.innerHTML = `✅ <strong>정확합니다!</strong> [${w}] 작업자의 데이터를 올바르게 추상화했습니다.<br>Step 2 [패턴 분석] 단계가 해제되었습니다.`;
+            fb.style.display = 'block';
+            
+            unlockedStep = Math.max(unlockedStep, 2);
+            switchStep(2);
+        } else {
+            fb.className = 'info-box feedback-wrong';
+            fb.innerHTML = `❌ <strong>선택한 항목이 좌측 [${w}] 작업자의 데이터와 일치하지 않습니다.</strong> 다시 대조해보세요.`;
+            fb.style.display = 'block';
+        }
+    }
+
+    // Step 2 검증
+    function verifyStep2() {
+        const r1 = document.getElementById('s2Rule1').value;
+        const r2 = document.getElementById('s2Rule2').value;
+        const fb = document.getElementById('fb2');
+
+        if (!r1 || !r2) {
+            fb.className = 'info-box feedback-wrong';
+            fb.innerHTML = '⚠️ 빈칸을 모두 선택해주세요.';
+            fb.style.display = 'block';
+            return;
+        }
+
+        if (r1 === '헐거운 끼워맞춤' && r2 === '항상 죔새') {
+            fb.className = 'info-box feedback-correct';
+            fb.innerHTML = `✅ <strong>패턴 규칙 완성!</strong> 조건식에 따른 물리적 현상과 끼워맞춤 관계를 올바르게 정리했습니다.<br>Step 3 [알고리즘 적용] 단계가 해제되었습니다.`;
+            fb.style.display = 'block';
+
+            unlockedStep = Math.max(unlockedStep, 3);
+            switchStep(3);
+        } else {
+            fb.className = 'info-box feedback-wrong';
+            fb.innerHTML = `❌ <strong>규칙 연결이 틀렸습니다.</strong><br>• $S_{max} < H$: 항상 틈새 ➔ 헐거운 끼워맞춤<br>• $S_{min} > H$: 항상 죔새 ➔ 억지 끼워맞춤`;
+            fb.style.display = 'block';
+        }
+    }
+
+    // Step 3 제출 및 최종 채점
+    function submitStep3() {
+        const a1 = document.getElementById('s3Ans1').value;
+        const a2 = document.getElementById('s3Ans2').value;
+        const fb = document.getElementById('fb3');
+
+        if (!a1 || !a2) {
+            fb.className = 'info-box feedback-wrong';
+            fb.innerHTML = '⚠️ 현상과 끼워맞춤 종류를 모두 선택해 주세요.';
+            fb.style.display = 'block';
+            return;
+        }
+
+        attempts++;
+        document.getElementById('attemptVal').innerText = `${attempts}회`;
+
+        if (a1 === targetProblem.ans1 && a2 === targetProblem.ans2) {
+            score += 1;
+            document.getElementById('scoreVal').innerText = `${score}점`;
+            
+            triggerConfetti();
+            document.getElementById('successModal').style.display = 'flex';
+        } else {
+            score -= 1;
+            document.getElementById('scoreVal').innerText = `${score}점`;
+
+            fb.className = 'info-box feedback-wrong';
+            fb.innerHTML = `❌ <strong>오답입니다! (-1점 감점)</strong><br>정답: [${targetProblem.ans1}], [${targetProblem.ans2}]<br>신규 규격 부품 치수와 베어링 치수를 다시 비교해보세요!`;
+            fb.style.display = 'block';
+        }
+    }
+
+    // 성공 모달 닫고 다음 문제로
+    function closeModalAndNext() {
+        document.getElementById('successModal').style.display = 'none';
+        initRound();
+    }
+
+    // 게임 전체 다시하기
+    function resetGame() {
+        score = 0;
+        attempts = 0;
+        document.getElementById('scoreVal').innerText = '0점';
+        document.getElementById('attemptVal').innerText = '0회';
+        initRound();
+    }
+
+    // 정답 폭죽 효과
+    function triggerConfetti() {
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const particles = [];
+        const colors = ['#4F46E5', '#0EA5E9', '#10B981', '#F59E0B', '#EC4899'];
+
+        for (let i = 0; i < 80; i++) {
+            particles.push({
+                x: canvas.width / 2,
+                y: canvas.height / 2,
+                vx: (Math.random() - 0.5) * 14,
+                vy: (Math.random() - 0.5) * 14 - 3,
+                size: Math.random() * 8 + 4,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                alpha: 1
+            });
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            let active = false;
+
+            particles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.22;
+                p.alpha -= 0.016;
+
+                if (p.alpha > 0) {
+                    active = true;
+                    ctx.save();
+                    ctx.globalAlpha = p.alpha;
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+            });
+
+            if (active) requestAnimationFrame(animate);
+        }
+        animate();
+    }
+</script>
+</body>
+</html>
